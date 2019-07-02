@@ -57,6 +57,7 @@
 			},
 			{
 				"name": "For Each RedShiftaSQL",
+				"description": "ForEAchComment",
 				"type": "ForEach",
 				"dependsOn": [
 					{
