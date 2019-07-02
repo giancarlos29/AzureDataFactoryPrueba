@@ -4,6 +4,7 @@
 		"activities": [
 			{
 				"name": "GETCFG",
+				"description": "Cometnario",
 				"type": "Lookup",
 				"dependsOn": [],
 				"policy": {
