@@ -1,0 +1,341 @@
+{
+	"name": "AmazonRedShift",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LinkAmazonWSRedShift",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"TableName": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "RelationalTable",
+		"structure": [
+			{
+				"name": "userid",
+				"type": "String"
+			},
+			{
+				"name": "userlastname",
+				"type": "String"
+			},
+			{
+				"name": "userfirstname",
+				"type": "String"
+			},
+			{
+				"name": "usermiddle",
+				"type": "String"
+			},
+			{
+				"name": "userphone1",
+				"type": "String"
+			},
+			{
+				"name": "userphone2",
+				"type": "String"
+			},
+			{
+				"name": "userfax1",
+				"type": "String"
+			},
+			{
+				"name": "userage",
+				"type": "Decimal"
+			},
+			{
+				"name": "userisfemale",
+				"type": "Int16"
+			},
+			{
+				"name": "useraddress1",
+				"type": "String"
+			},
+			{
+				"name": "useraddress2",
+				"type": "String"
+			},
+			{
+				"name": "useraddress3",
+				"type": "String"
+			},
+			{
+				"name": "usercity",
+				"type": "String"
+			},
+			{
+				"name": "userst",
+				"type": "String"
+			},
+			{
+				"name": "usercountry",
+				"type": "String"
+			},
+			{
+				"name": "userzip",
+				"type": "String"
+			},
+			{
+				"name": "useremail1",
+				"type": "String"
+			},
+			{
+				"name": "useremail2",
+				"type": "String"
+			},
+			{
+				"name": "userinitdate",
+				"type": "DateTime"
+			},
+			{
+				"name": "userlastupdate",
+				"type": "DateTime"
+			},
+			{
+				"name": "userexpiredate",
+				"type": "DateTime"
+			},
+			{
+				"name": "userlevel",
+				"type": "Int32"
+			},
+			{
+				"name": "usergroups",
+				"type": "String"
+			},
+			{
+				"name": "userpwd_obsolete",
+				"type": "String"
+			},
+			{
+				"name": "userloginadmincode",
+				"type": "String"
+			},
+			{
+				"name": "userquestionslist",
+				"type": "String"
+			},
+			{
+				"name": "verifyuserpassword",
+				"type": "String"
+			},
+			{
+				"name": "userprimarycc",
+				"type": "Int32"
+			},
+			{
+				"name": "userconnectionspeed",
+				"type": "Int32"
+			},
+			{
+				"name": "usersslpreference",
+				"type": "String"
+			},
+			{
+				"name": "usersubscriptiongroup",
+				"type": "Int32"
+			},
+			{
+				"name": "userloginadmincodeeffective",
+				"type": "DateTime"
+			},
+			{
+				"name": "usernotes",
+				"type": "String"
+			},
+			{
+				"name": "useradminnotes",
+				"type": "String"
+			},
+			{
+				"name": "userpreferredsearchlevel",
+				"type": "Int32"
+			},
+			{
+				"name": "useremailliststatus",
+				"type": "Int32"
+			},
+			{
+				"name": "userpublicidentityoption",
+				"type": "Int32"
+			},
+			{
+				"name": "usersecuritygroup1",
+				"type": "String"
+			},
+			{
+				"name": "usersecuritygroup2",
+				"type": "String"
+			},
+			{
+				"name": "usersecuritygroup3",
+				"type": "String"
+			},
+			{
+				"name": "usersecuritygroup4",
+				"type": "String"
+			},
+			{
+				"name": "usersecuritygroup5",
+				"type": "String"
+			},
+			{
+				"name": "usersecuritygroup6",
+				"type": "String"
+			},
+			{
+				"name": "usersecuritygroup7",
+				"type": "String"
+			},
+			{
+				"name": "userpreventinboundemail",
+				"type": "Int16"
+			},
+			{
+				"name": "userdemographicgroup",
+				"type": "Int16"
+			},
+			{
+				"name": "userstatecode",
+				"type": "Int16"
+			},
+			{
+				"name": "userinitialep",
+				"type": "Int16"
+			},
+			{
+				"name": "usercompanyname",
+				"type": "String"
+			},
+			{
+				"name": "usersecuritygroup8",
+				"type": "String"
+			},
+			{
+				"name": "archivedsessions",
+				"type": "Decimal"
+			},
+			{
+				"name": "archivedpagecount",
+				"type": "Decimal"
+			},
+			{
+				"name": "archivedbannercount",
+				"type": "Decimal"
+			},
+			{
+				"name": "userlastlogin",
+				"type": "DateTime"
+			},
+			{
+				"name": "userbirthday",
+				"type": "DateTime"
+			},
+			{
+				"name": "usersessioncontrol",
+				"type": "Decimal"
+			},
+			{
+				"name": "userpreferredemailtype",
+				"type": "Int16"
+			},
+			{
+				"name": "userfullname",
+				"type": "String"
+			},
+			{
+				"name": "userpasswordexpires",
+				"type": "DateTime"
+			},
+			{
+				"name": "useraccountnumber",
+				"type": "String"
+			},
+			{
+				"name": "usercountycode",
+				"type": "Int32"
+			},
+			{
+				"name": "userprefix",
+				"type": "String"
+			},
+			{
+				"name": "usersuffix",
+				"type": "String"
+			},
+			{
+				"name": "usercounty",
+				"type": "String"
+			},
+			{
+				"name": "userlastupdatedby",
+				"type": "String"
+			},
+			{
+				"name": "userspouse",
+				"type": "String"
+			},
+			{
+				"name": "useroldaccountnumber",
+				"type": "String"
+			},
+			{
+				"name": "userallowsingleloginonly",
+				"type": "Int16"
+			},
+			{
+				"name": "userpreferredlanguageid",
+				"type": "Int16"
+			},
+			{
+				"name": "userstatecodedesc",
+				"type": "String"
+			},
+			{
+				"name": "userphone3",
+				"type": "String"
+			},
+			{
+				"name": "userphone1type",
+				"type": "Int32"
+			},
+			{
+				"name": "userphone2type",
+				"type": "Int32"
+			},
+			{
+				"name": "userphone3type",
+				"type": "Int32"
+			},
+			{
+				"name": "usersalutation",
+				"type": "String"
+			},
+			{
+				"name": "usersearch",
+				"type": "String"
+			},
+			{
+				"name": "usercareof",
+				"type": "String"
+			},
+			{
+				"name": "client_id",
+				"type": "Decimal"
+			},
+			{
+				"name": "userpasswordhash",
+				"type": "String"
+			}
+		],
+		"typeProperties": {
+			"tableName": {
+				"value": "@dataset().TableName",
+				"type": "Expression"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

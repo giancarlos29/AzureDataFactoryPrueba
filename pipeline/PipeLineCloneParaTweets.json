@@ -1,0 +1,219 @@
+{
+	"name": "PipeLineCloneParaTweets",
+	"properties": {
+		"activities": [
+			{
+				"name": "GETCFG",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlServerSource",
+						"sqlReaderQuery": {
+							"value": "select * from @{pipeline().parameters.ConfigTable}\nif @@rowcount = 0 throw 5000,'No rows in configuration table!',1",
+							"type": "Expression"
+						}
+					},
+					"dataset": {
+						"referenceName": "LinkTablaOriginal",
+						"type": "DatasetReference",
+						"parameters": {
+							"TableName": "dummy"
+						}
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "AWS REDSHIFT CFG",
+				"type": "Filter",
+				"dependsOn": [
+					{
+						"activity": "GETCFG",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('GETCFG').output.value",
+						"type": "Expression"
+					},
+					"condition": {
+						"value": "@equals(item().SRC_name, 'Tweets')",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "For Each RedShiftaSQL",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "AWS REDSHIFT CFG",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('AWS REDSHIFT CFG').output.value",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "GETMAXAWS",
+							"type": "Lookup",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SqlServerSource",
+									"sqlReaderQuery": {
+										"value": "SELECT MAX(@{item().WatermarkColumn}) as maxd FROM @{item().SRC_tab}",
+										"type": "Expression"
+									}
+								},
+								"dataset": {
+									"referenceName": "LinkTablaOriginal",
+									"type": "DatasetReference",
+									"parameters": {
+										"TableName": "dummy"
+									}
+								}
+							}
+						},
+						{
+							"name": "Copy AWS",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "GETMAXAWS",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SqlServerSource",
+									"sqlReaderQuery": {
+										"value": "SELECT   @{item().Cols} \nfrom (\n\nSELECT TOP (10)\n @{item().Cols} FROM @{item().SRC_tab} \nWHERE \n@{item().WatermarkColumn} > \n'@{item().WatermarkValue}'\nAND\n@{item().WatermarkColumn} <=\n'@{activity('GETMAXAWS').output.firstRow.MAXD}'\norder by @{item().WatermarkColumn} desc\n) sq\norder by @{item().WatermarkColumn} asc\n",
+										"type": "Expression"
+									}
+								},
+								"sink": {
+									"type": "SqlServerSink",
+									"preCopyScript": {
+										"value": "truncate table @{item().DST_Tab}",
+										"type": "Expression"
+									}
+								},
+								"enableStaging": false
+							},
+							"inputs": [
+								{
+									"referenceName": "LinkTablaOriginal",
+									"type": "DatasetReference",
+									"parameters": {
+										"TableName": "dummy"
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "LinkTablaOriginal",
+									"type": "DatasetReference",
+									"parameters": {
+										"TableName": {
+											"value": "@{item().DST_tab}",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						},
+						{
+							"name": "UPDATE WATERMARK AWS",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "Copy AWS",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[dbo].[UpdateWatermarkRu]",
+								"storedProcedureParameters": {
+									"id": {
+										"value": {
+											"value": "@{item().id}",
+											"type": "Expression"
+										},
+										"type": "Int16"
+									},
+									"NewWatermark": {
+										"value": {
+											"value": "@{activity('GETMAXAWS').output.firstRow.MAXD}",
+											"type": "Expression"
+										},
+										"type": "DateTime"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "SQLCONECCTION2",
+								"type": "LinkedServiceReference"
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"ConfigTable": {
+				"type": "string",
+				"defaultValue": "configRu"
+			}
+		},
+		"annotations": []
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

@@ -1,0 +1,246 @@
+{
+	"name": "ruPrueba",
+	"properties": {
+		"activities": [
+			{
+				"name": "GETCFG",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlServerSource",
+						"sqlReaderQuery": {
+							"value": "SELECT * from @{pipeline().parameters.ConfigTable} where enabled = 1\nIF @@ROWCOUNT = 0 THROW 50000,'No rows in configuration table!',1",
+							"type": "Expression"
+						}
+					},
+					"dataset": {
+						"referenceName": "ClippersDeRedShiftaSQLServer",
+						"type": "DatasetReference",
+						"parameters": {
+							"TableName": "dummy"
+						}
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "AWS REDSHIFT CFG",
+				"type": "Filter",
+				"dependsOn": [
+					{
+						"activity": "GETCFG",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('GETCFG').output.value",
+						"type": "Expression"
+					},
+					"condition": {
+						"value": "@equals(item().SRC_name, 'AWS')",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "For Each RedShiftaSQL",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "AWS REDSHIFT CFG",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('AWS REDSHIFT CFG').output.value",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "GETMAXAWS",
+							"type": "Lookup",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "AmazonRedshiftSource",
+									"query": {
+										"value": "SELECT MAX(@{item().WatermarkColumn}) \nas maxd FROM @{item().SRC_tab} ",
+										"type": "Expression"
+									}
+								},
+								"dataset": {
+									"referenceName": "AmazonRedShift",
+									"type": "DatasetReference",
+									"parameters": {
+										"TableName": "dummy"
+									}
+								},
+								"firstRowOnly": true
+							}
+						},
+						{
+							"name": "Copy From AWS",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "VariableFecha",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "AmazonRedshiftSource",
+									"query": {
+										"value": "SELECT @{item().Cols} FROM @{item().SRC_tab}\nWHERE @{item().WatermarkColumn} > \n'@{item().WatermarkValue}'\nAND\n@{item().WatermarkColumn} <=\n'@{variables('varLaClippers')}'  \nlimit 20\n \n",
+										"type": "Expression"
+									}
+								},
+								"sink": {
+									"type": "SqlServerSink",
+									"preCopyScript": {
+										"value": "truncate table @{item().DST_Tab}",
+										"type": "Expression"
+									}
+								},
+								"enableStaging": false
+							},
+							"inputs": [
+								{
+									"referenceName": "AmazonRedShift",
+									"type": "DatasetReference",
+									"parameters": {
+										"TableName": "dummy"
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "ClippersDeRedShiftaSQLServer",
+									"type": "DatasetReference",
+									"parameters": {
+										"TableName": {
+											"value": "@{item().DST_tab}",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						},
+						{
+							"name": "UPDATE WATERMARK AWS",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "Copy From AWS",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[load].[sp_UpdateWatermak]",
+								"storedProcedureParameters": {
+									"id": {
+										"value": {
+											"value": "@{item().id}",
+											"type": "Expression"
+										},
+										"type": "Int16"
+									},
+									"NewWatermark": {
+										"value": {
+											"value": "@{variables('varLaClippers')}",
+											"type": "Expression"
+										},
+										"type": "DateTime"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "SqlServer1",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "VariableFecha",
+							"type": "SetVariable",
+							"dependsOn": [
+								{
+									"activity": "GETMAXAWS",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "varLaClippers",
+								"value": {
+									"value": "@coalesce(activity('GETMAXAWS').output?.firstRow?.MAXD,formatDateTime(utcnow()))",
+									"type": "Expression"
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"ConfigTable": {
+				"type": "string",
+				"defaultValue": "load.Config"
+			}
+		},
+		"variables": {
+			"varLaClippers": {
+				"type": "String",
+				"defaultValue": "dummy"
+			}
+		},
+		"annotations": []
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}
